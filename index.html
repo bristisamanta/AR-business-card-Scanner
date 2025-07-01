@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Business Card Scanner - Extract Contacts Instantly</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Onboarding Modal -->
+    <div id="onboardingModal" class="modal-overlay">
+        <div class="modal-content animate-slide-up">
+            <div class="modal-header">
+                <h2>Welcome! 👋</h2>
+                <button class="close-btn" onclick="closeOnboarding()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="welcome-icon">
+                    <i class="fas fa-camera animate-bounce"></i>
+                </div>
+                <h3>Scan Any Business Card</h3>
+                <p>Point your camera at a business card or upload an image. We'll extract all contact details automatically!</p>
+                
+                <div class="features-grid">
+                    <div class="feature-item animate-fade-in" style="animation-delay: 0.2s">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <p><strong>Instant Results</strong><br>Fast & accurate</p>
+                    </div>
+                    <div class="feature-item animate-fade-in" style="animation-delay: 0.4s">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <p><strong>No Login</strong><br>Privacy first</p>
+                    </div>
+                </div>
+                
+                <div class="info-box animate-fade-in" style="animation-delay: 0.6s">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <p><strong>For Everyone</strong></p>
+                        <p>Designed for students, professionals, and seniors. Simple, fast, and accessible.</p>
+                    </div>
+                </div>
+                
+                <button class="btn-primary animate-pulse" onclick="closeOnboarding()">
+                    Get Started 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal-overlay camera-modal">
+        <div class="camera-container">
+            <video id="cameraVideo" autoplay playsinline></video>
+            <div class="camera-overlay">
+                <div class="scan-frame animate-pulse">
+                    <div class="corner top-left"></div>
+                    <div class="corner top-right"></div>
+                    <div class="corner bottom-left"></div>
+                    <div class="corner bottom-right"></div>
+                </div>
+                <div class="scan-instruction">
+                    📇 Position business card in frame
+                </div>
+            </div>
+            <div class="camera-controls">
+                <button class="control-btn" onclick="closeCamera()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button class="capture-btn animate-scale" onclick="captureImage()">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <button class="control-btn" onclick="switchCamera()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <p class="camera-hint">Tap the camera button to capture</p>
+        </div>
+        <canvas id="captureCanvas" style="display: none;"></canvas>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header animate-fade-in">
+            <div class="badge animate-bounce">
+                <i class="fas fa-sparkles"></i>
+                AR Business Card Scanner
+            </div>
+            
+            <h1 class="title animate-slide-up" style="animation-delay: 0.2s">
+                Extract Contacts
+                <span class="gradient-text">Instantly</span>
+            </h1>
+            
+            <p class="subtitle animate-slide-up" style="animation-delay: 0.4s">
+                📇 Just point your camera at any business card or upload a picture — we'll automatically extract all contact details in seconds!
+            </p>
+
+            <div class="feature-pills animate-fade-in" style="animation-delay: 0.6s">
+                <div class="pill">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>No Login Required</span>
+                </div>
+                <div class="pill">
+                    <i class="fas fa-users"></i>
+                    <span>All Ages Friendly</span>
+                </div>
+                <div class="pill">
+                    <i class="fas fa-bolt"></i>
+                    <span>Instant Results</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="scanOptions" class="scan-options animate-fade-in" style="animation-delay: 0.8s">
+                <div class="option-card camera-option">
+                    <div class="option-icon">
+                        <i class="fas fa-camera animate-float"></i>
+                    </div>
+                    <h3>Use Camera</h3>
+                    <p>Point your camera at a business card for real-time scanning</p>
+                    <button class="btn-camera" onclick="startCamera()">
+                        <i class="fas fa-camera"></i>
+                        Scan with Camera
+                    </button>
+                </div>
+
+                <div class="option-card upload-option">
+                    <div class="option-icon">
+                        <i class="fas fa-upload animate-float" style="animation-delay: 0.5s"></i>
+                    </div>
+                    <h3>Upload Image</h3>
+                    <p>Choose an existing photo of a business card from your device</p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                        <div class="upload-content">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p>Drag & drop an image, or click to browse</p>
+                            <div class="file-types">
+                                <i class="fas fa-image"></i>
+                                <span>JPG, PNG, or WEBP</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-sample" onclick="loadSampleCard()">
+                        <i class="fas fa-file-image"></i>
+                        Try Sample Card
+                    </button>
+                </div>
+            </div>
+
+            <!-- Processing Loader -->
+            <div id="processingLoader" class="processing-loader" style="display: none;">
+                <div class="loader-content animate-fade-in">
+                    <div class="spinner"></div>
+                    <h3>Processing Image...</h3>
+                    <p>Extracting contact information...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Display -->
+            <div id="contactResult" class="contact-result" style="display: none;">
+                <div class="contact-card animate-slide-up">
+                    <div class="contact-header">
+                        <div class="header-content">
+                            <h3>Contact Information</h3>
+                            <div class="confidence-indicator">
+                                <div class="confidence-dot"></div>
+                                <span class="confidence-text">95% confidence</span>
+                            </div>
+                        </div>
+                        <button class="edit-btn" onclick="toggleEdit()">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="contact-fields">
+                        <div class="field-group">
+                            <label><i class="fas fa-user"></i> Name</label>
+                            <div class="field-container">
+                                <input type="text" id="contactName" readonly>
+                                <button class="copy-btn" onclick="copyToClipboard('contactName', this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label><i class="fas fa-envelope"></i> Email</label>
+                            <div class="field-container">
+                                <input type="text" id="contactEmail" readonly>
+                                <button class="copy-btn" onclick="copyToClipboard('contactEmail', this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label><i class="fas fa-phone"></i> Phone</label>
+                            <div class="field-container">
+                                <input type="text" id="contactPhone" readonly>
+                                <button class="copy-btn" onclick="copyToClipboard('contactPhone', this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label><i class="fas fa-building"></i> Company</label>
+                            <div class="field-container">
+                                <input type="text" id="contactCompany" readonly>
+                                <button class="copy-btn" onclick="copyToClipboard('contactCompany', this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <label><i class="fas fa-globe"></i> Website</label>
+                            <div class="field-container">
+                                <input type="text" id="contactWebsite" readonly>
+                                <button class="copy-btn" onclick="copyToClipboard('contactWebsite', this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-actions">
+                        <div id="editActions" style="display: none;">
+                            <button class="btn-save" onclick="saveContact()">Save Changes</button>
+                            <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+                        </div>
+                        <div id="normalActions">
+                            <button class="btn-download" onclick="downloadVCard()">
+                                <i class="fas fa-download"></i>
+                                Download vCard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="new-scan-section">
+                    <button class="btn-new-scan" onclick="startNewScan()">
+                        Scan Another Card
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tips Section -->
+            <div id="tipsSection" class="tips-section animate-fade-in" style="animation-delay: 1s">
+                <h4>💡 Tips for Best Results</h4>
+                <div class="tips-grid">
+                    <div class="tip-item animate-slide-up" style="animation-delay: 1.2s">
+                        <div class="tip-number">1</div>
+                        <p>Ensure good lighting and avoid shadows</p>
+                    </div>
+                    <div class="tip-item animate-slide-up" style="animation-delay: 1.4s">
+                        <div class="tip-number">2</div>
+                        <p>Keep the card flat and fully visible</p>
+                    </div>
+                    <div class="tip-item animate-slide-up" style="animation-delay: 1.6s">
+                        <div class="tip-number">3</div>
+                        <p>Make sure text is clear and readable</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer animate-fade-in" style="animation-delay: 1.8s">
+            <p>🔒 Your privacy matters - all processing happens locally in your browser</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
